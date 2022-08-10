@@ -146,7 +146,6 @@ public class CliMain {
             System.out.println(a);
         }
         // choose one order
-        try{
         System.out.print("choss order number:");
         int orderId = sc.nextInt();
         OrderDetails validOrder = OrderFactory.validateOrder(orderId);
@@ -174,10 +173,9 @@ public class CliMain {
                     acceptRejectOrder(vendorObject);
             }
         }
-     }catch(Exception e){
-       System.out.println("Invalid input");
      }
-    }
+     
+    
 
 
     /**
@@ -248,8 +246,8 @@ public class CliMain {
             System.out.println(" Invalid Vendor id");
         } else {
 
-            System.out.println(" Press 1 - AcceptOrRejectorder \r\n " + "Press 2 - See Vendor Order history \n"
-                    + " Press any key to exit ");
+            System.out.println(" Press 1 - AcceptOrRejectorder \r\n " + "Press 2 - See Vendor Order history \n");
+                    
             int choice = sc.nextInt();
             switch (choice) {
                 case 1:
