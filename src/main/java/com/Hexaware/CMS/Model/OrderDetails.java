@@ -23,6 +23,13 @@ public class OrderDetails {
      this.orderValue = orderValue;
      this.orderStatus = orderStatus;
    }
+   public String getCustomerId(){
+    return customerId;
+   }
+
+   public int getOrderValue() {
+    return orderValue;
+   }
 
    @Override
    public String toString() {

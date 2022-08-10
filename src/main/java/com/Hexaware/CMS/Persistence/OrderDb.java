@@ -20,9 +20,9 @@ import java.sql.PreparedStatement;
  */
 public class OrderDb {
     static int i;
-    static String url = "jdbc:mysql://localhost:3306/CMSDB123456?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+    static String url = "jdbc:mysql://localhost:3306/CMSDB75793?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 	static String username = "root";
-	static String password = "Password123";
+	static String password = "Arunir@12";
     public static int insertDb(int fid, String fname, int fprice, int fq, int foodTotal) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -51,7 +51,7 @@ public class OrderDb {
             Connection con = DriverManager.getConnection(url, username, password );
             Statement stmt = con.createStatement();
 
-            ResultSet rs = stmt.executeQuery("select * from menu");
+            ResultSet rs = stmt.executeQuery("select * from Menu");
             ArrayList<Menu> list = new ArrayList<Menu>();
             while (rs.next()) {
 
@@ -61,6 +61,8 @@ public class OrderDb {
             }
             m = new Menu[list.size()];
             m = list.toArray(m);
+            stmt.close();
+            con.close();
 
         } catch (Exception e) {
             System.out.println(e);
@@ -93,6 +95,8 @@ public class OrderDb {
             }
             custArray = new Customer[list.size()];
             custArray = list.toArray(custArray);
+            stmt.close();
+            con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -109,7 +113,7 @@ public class OrderDb {
             Connection con = DriverManager.getConnection(url, username, password );
             Statement stmt = con.createStatement();
 
-            ResultSet rs = stmt.executeQuery("select * from vendor");
+            ResultSet rs = stmt.executeQuery("select * from Vendor");
             ArrayList<Vendor> list = new ArrayList<Vendor>();
             while (rs.next()) {
                 Vendor v = new Vendor(
@@ -136,7 +140,7 @@ public class OrderDb {
             Class.forName("com.mysql.cj.jdbc.Driver");
             Connection con = DriverManager.getConnection(url, username, password );
 
-            String sql = " select * from Vendor where vendor_id = ?  ";
+            String sql = " select * from Vendor where Vendor_id = ?  ";
             PreparedStatement stmt = con.prepareStatement(sql);
             stmt.setInt(1, venId);
 
@@ -224,14 +228,43 @@ public class OrderDb {
         return odArr;
     }
 
-    public static String acceptOrRejectOrder() {
-        //select * from orderdetails where order_id=? and vendor_id=? and orderStatus ="ordered"
-
-        return " Yet to be implemented ...";
+    // TODO : yet to impliment
+    public static int acceptOrRejectOrder(String status,int orderId){
+        try{
+            Connection con = DriverManager.getConnection(url,username,password);
+            String sql = "update OrderDetails set Order_status = ? where Order_No = ?";
+            PreparedStatement stm = con.prepareStatement(sql);
+            stm.setString(1, status);
+            stm.setInt(2,orderId);
+            stm.executeUpdate();
+            stm.close();
+            con.close();
+        } catch (Exception e){
+            System.out.print(e);
+        }
+        return i;
     }
-    public static int placeOrder(){
-        System.out.println( "yet to be implemented...");
-        return 0;
+    public static int placeOrder(int vendor_id,String customer_id,int food_id,int qtn,String date_time,int ord_value,String ord_status){
+        try {
+            
+            Connection con = DriverManager.getConnection(url,username,password);
+            String sqlStr = "insert into OrderDetails (Vendor_id,Customer_id,Food_id,Quantity,DateandTime,Order_value,Order_status) values(?,?,?,?,?,?,?)";
+            PreparedStatement stmt =con.prepareStatement(sqlStr);
+            stmt.setInt(1,vendor_id);
+            stmt.setString(2, customer_id);
+            stmt.setInt(3, food_id);
+            stmt.setInt(4,qtn);
+            stmt.setString(5, date_time);
+            stmt.setInt(6, ord_value);
+            stmt.setString(7, ord_status);
+            i = stmt.executeUpdate();
+            stmt.close();
+            con.close();
+            
+        } catch (Exception e){
+            System.out.println(e);
+        }
+        return i;
     }
 
     public static Customer validateCustomerLogin( int custLoginId, String custPassword){
@@ -239,10 +272,9 @@ public class OrderDb {
         try{
     
           Class.forName("com.mysql.cj.jdbc.Driver"); // register driver
-          Connection con=DriverManager.getConnection(  
-              url,"root", "Password123"); // Get the Connection
+          Connection con=DriverManager.getConnection(url,username,password); // Get the Connection
           //select * from customer where Cust_loginId=123 and Cust_Password = 'ab12';
-            String sqlStr = " select * from customer where Customer_Login_id=? and Customer_Password = ? "; 
+          String sqlStr = " select * from Customer where Customer_Login_id=? and Customer_Password = ? "; 
                
             PreparedStatement stmt=
               con.prepareStatement(sqlStr);
@@ -261,11 +293,106 @@ public class OrderDb {
                 // Creating object from single row of data of customer
               cs = new Customer(custId, custName, custPhone, 
                   custEmail, custWalletBal, custLoginId2, custPassword2);
+                  stmt.close();
+                  con.close();
             }
            }catch(Exception e){
           System.out.println( e.getMessage());
         }
         return cs;
       }
+    
+    public static int customerWalletBalance(String customerId){
+        try{
+            Connection con = DriverManager.getConnection(url,username,password);
+            String sqlStr = "select * from Customer where Customer_id=?";
+            PreparedStatement stmt=con.prepareStatement(sqlStr);
+            stmt.setString(1, customerId);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()){
+                i = rs.getInt("Customer_walletbal");
+            }
+            stmt.close();
+            con.close();
 
+        } catch(Exception e) {
+            System.out.print(e);
+        }
+        return i;
+    }
+    
+    public static void updateCustomerWallet(String customerId, int walletBalance){
+        try{
+
+            Connection con = DriverManager.getConnection(url,username,password);
+            String updateCostumerSql = "update Customer set Customer_walletbal = ? where Customer_id=?";
+            PreparedStatement stmt = con.prepareStatement(updateCostumerSql);
+            stmt.setInt(1, walletBalance);
+            stmt.setString(2,customerId);
+            i = stmt.executeUpdate();
+        } catch (Exception e){
+            System.out.print(e);
+        }
+    }
+
+    public static OrderDetails[]  vendorOrdersPending(int vendorId){
+        OrderDetails[] odArr = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection con = DriverManager.getConnection(url, username, password );
+            String sql = " select * from OrderDetails where Vendor_id = ? and Order_status='ordered'";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setInt(1, vendorId);
+            ResultSet rs = stmt.executeQuery();
+            ArrayList<OrderDetails> list = new ArrayList<OrderDetails>();
+            while (rs.next()) {
+                OrderDetails od = new OrderDetails(
+                    rs.getInt("Order_No"), 
+                    rs.getInt("Vendor_id"),
+                    rs.getString("Customer_id"), 
+                    rs.getInt("Food_id"), 
+                    rs.getInt("Quantity"), 
+                    rs.getString("DateandTime"), 
+                    rs.getInt("Order_value"), rs.getString("Order_status"));
+                list.add(od);
+            }
+            odArr = new OrderDetails[list.size()];
+            odArr = list.toArray(odArr);
+            stmt.close();
+            con.close();
+        } catch(Exception e){
+            System.out.println(e);
+        }
+        return odArr;
+    }
+    
+    public static OrderDetails validateOrder(int orderId){
+        OrderDetails ordObj = null;
+        try {
+            Connection con = DriverManager.getConnection(url, username, password );
+            String sql = "select * from OrderDetails where Order_No=?";
+            PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setInt(1, orderId);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()){
+                ordObj = new OrderDetails(
+                    rs.getInt("Order_No"), 
+                    rs.getInt("Vendor_id"),
+                    rs.getString("Customer_id"), 
+                    rs.getInt("Food_id"), 
+                    rs.getInt("Quantity"), 
+                    rs.getString("DateandTime"), 
+                    rs.getInt("Order_value"), rs.getString("Order_status"));
+            }
+            stmt.close();
+            con.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return ordObj;
+
+    }
+
+  
 }
+

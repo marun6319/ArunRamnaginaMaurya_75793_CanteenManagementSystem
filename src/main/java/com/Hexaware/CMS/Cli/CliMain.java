@@ -7,11 +7,14 @@ import com.Hexaware.CMS.Model.Customer;
 import com.Hexaware.CMS.Model.Menu;
 import com.Hexaware.CMS.Model.OrderDetails;
 import com.Hexaware.CMS.Model.Vendor;
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
+
 
 /**
  * CliMain used as Client interface for java coading.
  * 
- * @author hexware
+ * @author hexware okay
  */
 //mvn exec:java -Dexec.mainClass=com.Hexaware.CMS.Cli.CliMain
 public class CliMain {
@@ -23,8 +26,7 @@ public class CliMain {
      */
     public static void main(String[] args) {
         boolean inloop = true;
-
-        while ( inloop ){
+        while(inloop){
         System.out.println("Canteen Management System");
         System.out.println("Enter your choice....");
         System.out.println("1. Show Menu");
@@ -45,7 +47,7 @@ public class CliMain {
                 customerProfile();
                 break;
             case 4:
-                inloop = false;
+            inloop = false;
                 Runtime.getRuntime().halt(0);
             default:
                 System.out.println("Choose option 1 , 2, 3 , 4" );
@@ -56,18 +58,18 @@ public class CliMain {
     /**
      * this method is to place food order.
      */
-    public static void placeOrder(Customer cs) {
+    public static void placeOrder(Customer c) {
         Menu[] mArray = OrderFactory.showFoodMenu();
         for ( Menu m : mArray)
             System.out.println(m);
         boolean mFlag = false;
         System.out.println("Enter Food id");
         int foodId = sc.nextInt();
-        Menu mObj=null;
+        Menu m1=null;
         for ( Menu m : mArray){
             if ( m.getFoodId() == foodId ){
                 mFlag = true;
-                mObj = m;
+                m1 = m;
                 break;
             }
         }
@@ -77,12 +79,23 @@ public class CliMain {
         }
         System.out.println("Enter Food Qty");
         int qty = sc.nextInt();
-        int totalCost = qty * mObj.getFoodPrice();
-        int wB = cs.getCustWalletBalance();
+        int totalCost = qty * m1.getFoodPrice();
+        int wB = c.getCustWalletBalance();
         if ( wB > totalCost) {
             System.out.println( "proceed");
             System.out.println("To be implemented by you...");
-            int i = OrderFactory.placeOrder();
+            int venderId = m1.getVendorId();
+            String customerId = c.getCustId();
+            String status = "ordered";
+            SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
+            Date now = new Date();
+            String curDateTime = dt.format(now);
+            int i = OrderFactory.placeOrder( venderId,customerId, foodId, qty,curDateTime, totalCost,status);
+            System.out.println(" records inserted.. " + i );
+            int walletBal = wB - totalCost;
+            OrderFactory.updateCustomerWallet(customerId, walletBal);
+            System.out.println(" records updated.. " + i );
+
             System.out.println(" records inserted.. " + i );
         } else {
             System.out.println( "invalid wallet balance..");
@@ -127,10 +140,41 @@ public class CliMain {
      * this method is to acceptRejectOrder.
      */
      public static void acceptRejectOrder(Vendor vendorObject){
-        System.out.println("To be implemented by you... based on orderid, vendorid");
-        String str = OrderFactory.acceptRejectOrder();
-        System.out.println(str);
+        int i=0;
+        OrderDetails[] ord = OrderFactory.vendorOrdersPending(vendorObject.getVenId());
+        for(OrderDetails a : ord){
+            System.out.println(a);
+        }
+        // choose one order
+        System.out.print("choss order number:");
+        int orderId = sc.nextInt();
+        OrderDetails validOrder = OrderFactory.validateOrder(orderId);
+        // validate it as valid order from orderdetailstable
+        System.out.println(validOrder);
+        if(validOrder != null){
+            System.out.print("'1' to Accept order / '0' to rejeact Order :");
+            int result = sc.nextInt();
+            switch(result){
+                case 0:
+                OrderFactory.acceptRejectOrder("Reject",orderId);
+                String customerId = validOrder.getCustomerId();
+                System.out.println(customerId);
+                int walletBal= OrderFactory.customerWalletBalance(customerId);
+                System.out.println(walletBal);
+                walletBal += validOrder.getOrderValue();
+                System.out.println(walletBal);
+                OrderFactory.updateCustomerWallet(customerId,walletBal);
+                    break;
+                case 1:                    
+                        i = OrderFactory.acceptRejectOrder("Accept",orderId);
+                        break;
+                default:
+                    System.out.println("Invalid Choice");
+                    acceptRejectOrder(vendorObject);
+            }
+        }
      }
+
 
     /**
      * this method is for customerProfile.
