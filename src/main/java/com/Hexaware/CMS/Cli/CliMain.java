@@ -146,6 +146,7 @@ public class CliMain {
             System.out.println(a);
         }
         // choose one order
+        try{
         System.out.print("choss order number:");
         int orderId = sc.nextInt();
         OrderDetails validOrder = OrderFactory.validateOrder(orderId);
@@ -173,7 +174,10 @@ public class CliMain {
                     acceptRejectOrder(vendorObject);
             }
         }
+     }catch(Exception e){
+       System.out.println("Invalid input");
      }
+    }
 
 
     /**
